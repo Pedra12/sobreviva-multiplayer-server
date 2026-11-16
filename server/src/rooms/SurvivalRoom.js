@@ -26,13 +26,23 @@ export class SurvivalRoom extends Room {
       player.moving = Boolean(data.moving);
     });
 
-    // O anfitrião inicia a partida de todos os membros da sala.
+    // O servidor valida o anfitrião e grava o início no estado sincronizado.
+    // Assim, todos os clientes recebem a mesma confirmação, inclusive quem
+    // terminar de sincronizar o estado logo após a partida começar.
     this.onMessage("startMatchRequest", (client) => {
-      if (client.sessionId !== this.state.hostId) return;
-      this.broadcast("startMatch", { hostId: client.sessionId, startedAt: Date.now() });
+      if (this.state.started) {
+        client.send("startMatchRejected", { reason: "A partida já foi iniciada." });
+        return;
+      }
+      if (client.sessionId !== this.state.hostId) {
+        client.send("startMatchRejected", { reason: "Somente o anfitrião pode iniciar a partida." });
+        return;
+      }
+      this.state.started = true;
+      this.state.startedAt = Date.now();
+      this.broadcast("startMatch", { hostId: client.sessionId, startedAt: this.state.startedAt });
     });
 
-    // Todos recebem a mesma criação, com a mesma semente e origem.
     this.onMessage("gameEventRequest", (client, data) => {
       const player = this.state.players.get(client.sessionId);
       if (!player || !data || typeof data !== "object") return;
@@ -50,14 +60,11 @@ export class SurvivalRoom extends Room {
         originX: clamp(finite(data.x, player.x), -112, 112),
         originZ: clamp(finite(data.z, player.z), -112, 112)
       };
-      // O autor já criou o evento localmente. Envie apenas aos outros membros,
-      // evitando duplicar o mesmo monstro/catástrofe no aparelho que escreveu.
       for (const other of this.clients) {
         if (other.sessionId !== client.sessionId) other.send("gameEvent", event);
       }
     });
 
-    // Somente o host publica o estado autoritativo das entidades.
     this.onMessage("worldSync", (client, data) => {
       if (client.sessionId !== this.state.hostId || !data || !Array.isArray(data.entities)) return;
       const entities = data.entities.slice(0, 80).map((e) => ({
@@ -88,16 +95,16 @@ export class SurvivalRoom extends Room {
     player.x = Math.cos(angle) * radius;
     player.z = Math.sin(angle) * radius;
     this.state.players.set(client.sessionId, player);
-    if (!this.state.hostId) this.state.hostId = client.sessionId;
-    this.broadcast("lobby", { count: this.state.players.size });
+    if (!this.state.hostId && !this.state.started) this.state.hostId = client.sessionId;
+    this.broadcast("lobby", { count: this.state.players.size, started: this.state.started });
   }
 
   onLeave(client) {
     this.state.players.delete(client.sessionId);
-    if (this.state.hostId === client.sessionId) {
+    if (this.state.hostId === client.sessionId && !this.state.started) {
       const next = this.state.players.keys().next();
       this.state.hostId = next.done ? "" : next.value;
     }
-    this.broadcast("lobby", { count: this.state.players.size });
+    this.broadcast("lobby", { count: this.state.players.size, started: this.state.started });
   }
 }
