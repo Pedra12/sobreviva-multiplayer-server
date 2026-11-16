@@ -34,7 +34,8 @@ export class SurvivalRoom extends Room {
       if (!text) return;
       const requestId = cleanText(data.requestId).replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 64);
       if (!requestId) return;
-      const seed = (Math.floor(Math.random() * 0x7fffffff) ^ (++this.eventCounter * 2654435761) ^ (finite(data.seed) >>> 0)) >>> 0;
+      const seed = (finite(data.seed, 1) >>> 0) || 1;
+      this.eventCounter++;
       const event = {
         id: client.sessionId + ":" + requestId,
         seed,
