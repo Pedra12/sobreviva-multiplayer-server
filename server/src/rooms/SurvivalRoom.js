@@ -26,16 +26,12 @@ export class SurvivalRoom extends Room {
       player.moving = Boolean(data.moving);
     });
 
-    // O servidor valida o anfitrião e grava o início no estado sincronizado.
-    // Assim, todos os clientes recebem a mesma confirmação, inclusive quem
-    // terminar de sincronizar o estado logo após a partida começar.
+    // Qualquer jogador conectado pode solicitar o início. O servidor é quem
+    // marca a partida como iniciada e sincroniza o mesmo estado para a sala.
     this.onMessage("startMatchRequest", (client) => {
+      if (!this.state.players.has(client.sessionId)) return;
       if (this.state.started) {
-        client.send("startMatchRejected", { reason: "A partida já foi iniciada." });
-        return;
-      }
-      if (client.sessionId !== this.state.hostId) {
-        client.send("startMatchRejected", { reason: "Somente o anfitrião pode iniciar a partida." });
+        client.send("startMatch", { hostId: this.state.hostId, startedAt: this.state.startedAt });
         return;
       }
       this.state.started = true;
