@@ -26,7 +26,13 @@ export class SurvivalRoom extends Room {
       player.moving = Boolean(data.moving);
     });
 
-    // O anfitrião inicia a partida de todos os membros da sala.\n    this.onMessage("startMatchRequest", (client) => {\n      if (client.sessionId !== this.state.hostId) return;\n      this.broadcast("startMatch", { hostId: client.sessionId, startedAt: Date.now() });\n    });\n\n    // Todos recebem a mesma criação, com a mesma semente e origem.
+    // O anfitrião inicia a partida de todos os membros da sala.
+    this.onMessage("startMatchRequest", (client) => {
+      if (client.sessionId !== this.state.hostId) return;
+      this.broadcast("startMatch", { hostId: client.sessionId, startedAt: Date.now() });
+    });
+
+    // Todos recebem a mesma criação, com a mesma semente e origem.
     this.onMessage("gameEventRequest", (client, data) => {
       const player = this.state.players.get(client.sessionId);
       if (!player || !data || typeof data !== "object") return;
