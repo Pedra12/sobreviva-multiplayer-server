@@ -4,7 +4,7 @@ import { SurvivalPlayer, SurvivalState } from "./SurvivalState.js";
 const ALLOWED_CHARACTERS = new Set(["bacon", "noob", "rob"]);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-const cleanName = (value) => String(value || "Jogador").replace(/[<>\\u0000-\\u001f]/g, "").trim().slice(0, 18) || "Jogador";
+const cleanName = (value) => String(value || "Jogador").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, 18) || "Jogador";
 
 export class SurvivalRoom extends Room {
   maxClients = 8;
