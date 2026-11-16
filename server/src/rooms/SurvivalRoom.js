@@ -32,15 +32,22 @@ export class SurvivalRoom extends Room {
       if (!player || !data || typeof data !== "object") return;
       const text = cleanText(data.text);
       if (!text) return;
-      const seed = (Math.floor(Math.random() * 0x7fffffff) ^ (++this.eventCounter * 2654435761)) >>> 0;
-      this.broadcast("gameEvent", {
-        id: "ev" + this.eventCounter,
+      const requestId = cleanText(data.requestId).replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 64);
+      if (!requestId) return;
+      const seed = (Math.floor(Math.random() * 0x7fffffff) ^ (++this.eventCounter * 2654435761) ^ (finite(data.seed) >>> 0)) >>> 0;
+      const event = {
+        id: client.sessionId + ":" + requestId,
         seed,
         text,
         by: player.name,
         originX: clamp(finite(data.x, player.x), -112, 112),
         originZ: clamp(finite(data.z, player.z), -112, 112)
-      });
+      };
+      // O autor já criou o evento localmente. Envie apenas aos outros membros,
+      // evitando duplicar o mesmo monstro/catástrofe no aparelho que escreveu.
+      for (const other of this.clients) {
+        if (other.sessionId !== client.sessionId) other.send("gameEvent", event);
+      }
     });
 
     // Somente o host publica o estado autoritativo das entidades.
