@@ -11,5 +11,6 @@ export const SurvivalPlayer = schema({
 }, "SurvivalPlayer");
 
 export const SurvivalState = schema({
-  players: t.map(SurvivalPlayer)
+  players: t.map(SurvivalPlayer),
+  hostId: t.string().default("")
 }, "SurvivalState");
