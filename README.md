@@ -4,7 +4,7 @@ Servidor Colyseus separado do jogo HTML. Suporta salas privadas para até 8 joga
 
 ## Cliente compatível
 
-Use o HTML **v48 ou posterior** com este servidor. A v48 adiciona:
+Use o HTML **v49 ou posterior** com este servidor. A v48 adiciona:
 - criação de ideias/eventos transmitida para todos os jogadores da sala;
 - semente aleatória e posição de origem compartilhadas para a criação correspondente;
 - host da sala publica snapshots de posição/rotação/estado básico das entidades;
