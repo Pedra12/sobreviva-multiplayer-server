@@ -9,6 +9,7 @@ const cleanText = (value) => String(value || "").replace(/[\\u0000-\\u001f]/g, "
 
 export class SurvivalRoom extends Room {
   maxClients = 8;
+  seatReservationTimeout = 60;
   patchRate = 50;
   maxMessagesPerSecond = 40;
   state = new SurvivalState();
